@@ -1,2 +1,6 @@
-AtCoder/**/*.in
-AtCoder/**/*.out
+atcoder.jp/**/*.in
+atcoder.jp/**/*.out
+atcoder.jp/**/generate.py
+company_specific_test
+paiza
+track
