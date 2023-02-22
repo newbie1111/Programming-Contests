@@ -1,0 +1,19 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+online-judge-tools = "*"
+online-judge-api-client = "*"
+online-judge-template-generator = "*"
+icecream = "*"
+yapf = "*"
+flake8 = "*"
+texttable = "*"
+numpy = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.9"
