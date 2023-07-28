@@ -7,15 +7,98 @@ import (
 	"math"
 	"os"
 	"reflect"
+	"strconv"
+	"strings"
 )
 
 var (
-	input  = bufio.NewScanner(os.Stdin)
-	YES    = "YES"
-	NO     = "NO"
-	MAXINT = int(^uint(0) >> 1)
-	MININT = -MAXINT - 1
+	input            = bufio.NewScanner(os.Stdin)
+	YES, Yes, yes    = "YES", "Yes", "yes"
+	NO, No, no       = "NO", "No", "no"
+	Even             = "Even"
+	Odd              = "Odd"
+	MAXINT, MAXINT64 = int(^uint(0) >> 1), int64(^uint64(0) >> 1)
+	MININT, MININT64 = -MAXINT - 1, -MAXINT64 - 1
 )
+
+// Set
+
+type Set map[int]bool
+
+func (st *Set) NewSet(vars ...int) *Set {
+	var s = make(Set)
+	for _, v := range vars {
+		s[v] = true
+	}
+	return &s
+}
+
+func (st *Set) SetKeys() []int {
+	var keys []int
+
+	for k, _ := range *st {
+		keys = append(keys, k)
+	}
+
+	return keys
+}
+
+func (st *Set) Add(v int) { (*st)[v] = true }
+
+func (st *Set) Exist(v int) bool { return (*st)[v] }
+
+func (st *Set) Empty() bool { return len(*st) == 0 }
+
+func (st *Set) Union(y Set) Set {
+	var res = make(Set)
+
+	for k, _ := range *st {
+		res[k] = true
+	}
+
+	for k, _ := range y {
+		res[k] = true
+	}
+
+	return res
+}
+
+func (st *Set) Difference(y Set) Set {
+	var res = make(Set)
+
+	for k, _ := range *st {
+		if !y[k] {
+			res[k] = true
+		}
+	}
+
+	return res
+}
+
+func (st *Set) Intersection(y Set) Set {
+	var res = make(Set)
+
+	for k, _ := range *st {
+		if y[k] {
+			res[k] = true
+		}
+	}
+
+	return res
+}
+
+func (st *Set) IsEqual(y Set) bool {
+	var (
+		x_keys            = st.SetKeys()
+		y_keys            = y.SetKeys()
+		intersection_xy   = st.Intersection(y)
+		intersection_keys = intersection_xy.SetKeys()
+	)
+
+	return len(x_keys) == len(intersection_keys) && len(y_keys) == len(intersection_keys)
+}
+
+func (st *Set) IsSubset(x, y Set) bool { return len(y.Difference(x)) == 0 }
 
 func dump(variable ...interface{}) {
 
@@ -142,10 +225,33 @@ func LCM(x, y int) int {
 	return x / GCD(x, y) * y
 }
 
-func solve() {
+func InputListInt() ([]int, error) {
+	var (
+		res []int
+	)
+
+	for _, s := range strings.Split(input.Text(), " ") {
+		n, err := strconv.ParseInt(s, 0, 0)
+
+		if err != nil {
+			return []int{}, err
+		}
+
+		res = append(res, int(n))
+	}
+
+	return res, nil
+}
+
+func solve() interface{} {
+}
+
+func init() {
+	input.Buffer(make([]byte, 1<<30), 1<<30)
 }
 
 func main() {
-	input.Buffer(make([]byte, 1<<20), 1<<20)
 
+	ans := solve()
+	fmt.Println(ans)
 }
