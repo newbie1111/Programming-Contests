@@ -6,9 +6,12 @@
   - [目次](#目次)
   - [リポジトリについて](#リポジトリについて)
   - [ojによるテスト](#ojによるテスト)
+  - [ojによって作られるテストファイルの削除](#ojによって作られるテストファイルの削除)
     - [準備](#準備)
     - [入出力テスト](#入出力テスト)
     - [提出](#提出)
+    - [テストファイルの削除](#テストファイルの削除)
+    - [注意事項](#注意事項)
 
 ## リポジトリについて
 
@@ -25,10 +28,14 @@
 - `oj-submits.sh`:`oj s`を複数ファイル一括で行う
 - `oj-tests.sh`:`oj t`を複数ファイル一括で行う
 
+## ojによって作られるテストファイルの削除
+
+ローカル内のテスト用ファイルが膨大になってきたため、`online-judge-tools`及び`oj-prepare`で生成されるテストファイルを削除するためのスクリプトを作成したので、これを使う。
+
 ### 準備
 
 ```bash
-sh oj-prepares.sh [<contest URL> ...]
+./oj-prepares.sh [<contest URL> ...]
 ```
 
 - コンテスト用のディレクトリを追加
@@ -40,7 +47,7 @@ sh oj-prepares.sh [<contest URL> ...]
 ### 入出力テスト
 
 ```bash
-sh oj-tests.sh [<submission file path> ...]
+./oj-tests.sh [<submission file path> ...]
 ```
 
 - それぞれのファイルパスに基づいて、`oj t`を行う
@@ -53,5 +60,17 @@ sh oj-tests.sh [<submission file path> ...]
 ### 提出
 
 ```bash
-sh oj-submits.sh [<submission file path> ...]
+./oj-submits.sh [<submission file path> ...]
 ```
+
+### テストファイルの削除
+
+```bash
+./oj-clearTestfiles.sh
+```
+
+### 注意事項
+
+`.sh`ファイルに実行権限が与えられているかどうか確認する。
+与えられていない場合、`chown`で権限を変更する。
+(`chmod 744 <権限を与えるファイル>`で`-rwxr--r--`とかにして、root権限だけに付与するのが妥当)
