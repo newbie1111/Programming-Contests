@@ -34,5 +34,3 @@ for arg; do
 
     cd $SCRIPT_DIR
 done
-
-return 0

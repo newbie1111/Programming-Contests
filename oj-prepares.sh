@@ -1,8 +1,5 @@
 #!/bin/bash
 
 for arg; do
-    oj-prepare ${arg}
-    sleep 5
+    oj-prepare ${arg} &
 done
-
-return 0
