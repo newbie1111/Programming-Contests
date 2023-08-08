@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"log"
 	"math"
 	"os"
 	"reflect"
@@ -30,11 +31,13 @@ initialize common variables
 */
 
 var (
-	input         = bufio.NewScanner(os.Stdin)
-	YES, Yes, yes = "YES", "Yes", "yes"
-	NO, No, no    = "NO", "No", "no"
-	Even          = "Even"
-	Odd           = "Odd"
+	input             = bufio.NewScanner(os.Stdin)
+	output, debug     = log.New(os.Stdout, "", 0), log.New(os.Stderr, "DEBUG : ", log.Lshortfile)
+	YES, Yes, yes     = "YES", "Yes", "yes"
+	NO, No, no        = "NO", "No", "no"
+	Even              = "Even"
+	Odd               = "Odd"
+	mod, mod998244353 = 1e9 + 7, 998244353
 )
 
 func init() {
@@ -47,7 +50,7 @@ Input / Output
 
 func dump(variable ...interface{}) {
 	for _, v := range variable {
-		fmt.Printf("%v : %v\n", reflect.TypeOf(v), v)
+		debug.Printf("%v : %v\n", reflect.TypeOf(v), v)
 	}
 }
 
