@@ -17,7 +17,7 @@ for arg; do
     if test -f $SUBMIT_FILE; then
 
         if test $SUBMIT_FILE_EXT = "go"; then
-            oj t -c "go run main.go"
+            oj t -c "go run main.go --verbose"
         elif test $SUBMIT_FILE_EXT = "py"; then
             oj t -c "python main.py"
         elif test $SUBMIT_FILE_EXT = "cpp"; then
