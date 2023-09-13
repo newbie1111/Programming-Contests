@@ -3,9 +3,9 @@ package main
 import (
 	"bufio"
 	"errors"
+	"flag"
 	"fmt"
 	"log"
-	"math"
 	"os"
 	"reflect"
 	"strconv"
@@ -16,7 +16,7 @@ import (
 problem solver
 */
 
-func solve() interface{} {
+func solve() any {
 	return nil
 }
 
@@ -42,6 +42,43 @@ var (
 
 func init() {
 	input.Buffer(make([]byte, 1<<30), 1<<30)
+
+	var (
+		verbose bool
+	)
+
+	flag.BoolVar(&verbose, "verbose", false, "")
+	flag.Parse()
+
+	if verbose {
+		debug.SetOutput(os.Stderr)
+	}
+}
+
+/*
+Generics Type Interface
+- Number
+	- Integer
+	- Float
+*/
+
+type Real interface {
+	Zahl | Float
+}
+
+type Zahl interface {
+	SignedInteger | UnSignedInteger
+}
+
+type SignedInteger interface {
+	int | int32 | int64
+}
+type UnSignedInteger interface {
+	uint | uint32 | uint64
+}
+
+type Float interface {
+	float32 | float64
 }
 
 /*
@@ -54,19 +91,19 @@ func dump(variable ...interface{}) {
 	}
 }
 
-func InputListInt() ([]int, error) {
+func InputListSignedInteger[SI SignedInteger](sep string) ([]SI, error) {
 	var (
-		res []int
+		res []SI
 	)
 
-	for _, s := range strings.Split(input.Text(), " ") {
-		n, err := strconv.ParseInt(s, 0, 0)
+	for _, s := range strings.Split(input.Text(), sep) {
+		n, err := strconv.ParseInt(s, 10, 64)
 
 		if err != nil {
-			return []int{}, err
+			return []SI{}, err
 		}
 
-		res = append(res, int(n))
+		res = append(res, SI(n))
 	}
 
 	return res, nil
@@ -74,84 +111,85 @@ func InputListInt() ([]int, error) {
 
 /*
 Data Structures
+- Set
+- Queue
 */
 
-type Set map[int]bool
+type Set[T comparable] map[T]struct{}
 
-func (st *Set) NewSet(vars ...int) *Set {
-	var s = make(Set)
-	for _, v := range vars {
-		s[v] = true
-	}
-	return &s
-}
-
-func (st *Set) SetKeys() []int {
-	var keys []int
-
-	for k, _ := range *st {
-		keys = append(keys, k)
-	}
-
-	return keys
-}
-
-func (st *Set) Add(v int) { (*st)[v] = true }
-
-func (st *Set) Exist(v int) bool { return (*st)[v] }
-
-func (st *Set) Empty() bool { return len(*st) == 0 }
-
-func (st *Set) Union(y Set) Set {
-	var res = make(Set)
-
-	for k, _ := range *st {
-		res[k] = true
-	}
-
-	for k, _ := range y {
-		res[k] = true
-	}
-
-	return res
-}
-
-func (st *Set) Difference(y Set) Set {
-	var res = make(Set)
-
-	for k, _ := range *st {
-		if !y[k] {
-			res[k] = true
-		}
-	}
-
-	return res
-}
-
-func (st *Set) Intersection(y Set) Set {
-	var res = make(Set)
-
-	for k, _ := range *st {
-		if y[k] {
-			res[k] = true
-		}
-	}
-
-	return res
-}
-
-func (st *Set) IsEqual(y Set) bool {
+func NewSet[T comparable](vars ...T) Set[T] {
 	var (
-		x_keys            = st.SetKeys()
-		y_keys            = y.SetKeys()
-		intersection_xy   = st.Intersection(y)
-		intersection_keys = intersection_xy.SetKeys()
+		newSet = make(Set[T])
 	)
 
-	return len(x_keys) == len(intersection_keys) && len(y_keys) == len(intersection_keys)
+	for _, v := range vars {
+		newSet.Add(v)
+	}
+
+	return newSet
 }
 
-func (st *Set) IsSubset(x, y Set) bool { return len(y.Difference(x)) == 0 }
+func (s *Set[T]) Add(x T) {
+	(*s)[x] = struct{}{}
+}
+
+func (s *Set[T]) Remove(x T) {
+	delete(*s, x)
+}
+
+func (s *Set[T]) Exist(x T) bool {
+	_, exist := (*s)[x]
+	return exist
+}
+
+func (s *Set[T]) Empty() bool {
+	return len(*s) == 0
+}
+
+type SliceQueue[T comparable] []T
+
+func NewSliceQueue[T comparable](vars ...T) SliceQueue[T] {
+	var (
+		newSliceQueue = make(SliceQueue[T], 0, len(vars))
+	)
+
+	for _, v := range vars {
+		newSliceQueue.Push(v)
+	}
+	return newSliceQueue
+}
+
+func (sq *SliceQueue[T]) Empty() bool {
+	return len(*sq) == 0
+}
+
+func (sq *SliceQueue[T]) Push(x T) {
+	*sq = append(*sq, x)
+}
+
+func (sq *SliceQueue[T]) Pop() (T, error) {
+	if sq.Empty() {
+		return *new(T), errors.New("size of queue is zero")
+	} else {
+		v := (*sq)[0]
+		(*sq)[0] = *new(T) // see also https://github.com/golang/go/wiki/SliceTricks
+		*sq = (*sq)[1:]
+
+		return v, nil
+	}
+}
+
+func (sq *SliceQueue[T]) Rotate(n int) {
+	if !sq.Empty() {
+		rotateIndex := n % len(*sq)
+
+		if rotateIndex < 0 {
+			rotateIndex = len(*sq) + rotateIndex
+		}
+
+		*sq = append((*sq)[rotateIndex:], (*sq)[:rotateIndex]...)
+	}
+}
 
 /*
 Character / String
@@ -174,41 +212,35 @@ Convert value
 - Power
 */
 
-func AbsInt(x int) int {
-	if x < 0 {
-		return -x
-	} else {
+// return absolute integer
+func Abs[R Real](x R) R {
+	if x >= 0 {
 		return x
+	} else {
+		return -x
 	}
 }
 
-func AbsInt64(x int64) int64 {
-	if x < 0 {
-		return -x
-	} else {
-		return x
+func PowInteger[Z Zahl](a, n Z) Z {
+	var (
+		res = Z(1)
+	)
+
+	for n > 0 {
+		if n&1 == 1 {
+			res *= a
+		}
+		a, n = a*a, n>>1
 	}
-}
 
-func AbsFloat64(x float64) float64 {
-	return math.Abs(x)
-}
-
-func ByteToInt(r byte) int {
-	return int(r - '0')
-}
-
-func PowInt(a, n int) int {
-	return int(math.Pow(float64(a), float64(n)))
-}
-
-func PowInt64(a, n int) int64 {
-	return int64(math.Pow(float64(a), float64(n)))
+	return res
 }
 
 /*
 Number theoretic algorithm
 - total
+- Enumerate all divisors
+- check prime number
 - Cumulative Sum
 - Arithmetic Progressions
 - Geometic Progressions
@@ -216,22 +248,9 @@ Number theoretic algorithm
 - Least Common Multipul
 */
 
-func SumInt(vars ...int) int {
+func Sum[R Real](vars ...R) R {
 	var (
-		sum int
-	)
-
-	for _, v := range vars {
-		sum += v
-	}
-
-	return sum
-
-}
-
-func SumInt64(vars ...int64) int64 {
-	var (
-		sum int64
+		sum R
 	)
 
 	for _, v := range vars {
@@ -241,88 +260,116 @@ func SumInt64(vars ...int64) int64 {
 	return sum
 }
 
-func CumulativeSumInt(vars []int) []int {
+func Divisors[Z Zahl](n Z) []Z {
+	div := make([]Z, 0)
+
+	for i := Z(1); i*i < Abs(n); i++ {
+		if n%i == 0 {
+			div = append(div, i)
+			if n/i != i {
+				div = append(div, n/i)
+			}
+		}
+	}
+
+	if n < 0 {
+		divCopy := make([]Z, len(div))
+		copy(divCopy, div)
+		for _, v := range divCopy {
+			div = append(div, -v)
+		}
+	}
+
+	return div
+}
+
+func isPrime[Z Zahl](n Z) bool {
+	switch {
+	case n < 2:
+		return false
+	case n == 2:
+		return true
+	case n != 2 && n%2 == 0:
+		return false
+	default:
+		for i := Z(3); i*i <= n; i = i + 2 {
+			if n%i == 0 {
+				return false
+			}
+		}
+		return true
+	}
+}
+
+func CumulativeSum[R Real](vars []R) []R {
 	var (
-		cumsum = make([]int, len(vars))
+		cumsum = make([]R, len(vars)+1)
 	)
 
 	if len(vars) != 0 {
-		copy(cumsum, vars)
-
-		for i, v := range vars[1:] {
-			index := i + 1
-			cumsum[index] = cumsum[index-1] + v
+		for i, v := range vars {
+			cumsum[i+1] = v + cumsum[i]
 		}
-
 	}
 
 	return cumsum
 }
 
-func ArithmeticProgressionsSumInt(a0, d, n int) (sum int64, err error) {
+func ArithmeticProgressionsSum[R Real, Z Zahl](a0, d R, n Z) (sum R, err error) {
 	if n < 0 {
 		sum, err = 0, errors.New("number of terms must not be negative.")
 	} else {
-		var (
-			a0_i64 = int64(a0)
-			d_i64  = int64(d)
-			n_i64  = int64(n)
-		)
-		sum, err = (a0_i64*n_i64)+n_i64*(n_i64-1)/2*d_i64, nil
+		nReal := R(n)
+		sum, err = (a0*nReal)+nReal*(nReal-1)/2*d, nil
 	}
 
 	return sum, err
 }
 
-func GeometicProgressionsSumInt(a0, r, n int) (sum int64, err error) {
+func GeometicProgressionsSum[Z Zahl](a0, r, n Z) (sum Z, err error) {
 	if n < 0 {
 		sum, err = 0, errors.New("number of terms must not be negative.")
 	} else {
-		var (
-			a0_f64 = float64(a0)
-			r_f64  = float64(r)
-			n_f64  = float64(n)
-		)
-		sum, err = int64(a0_f64*(math.Pow(r_f64, n_f64)-1)/(r_f64-1)), nil
+		sum, err = a0*(PowInteger(r, n)-1)/(r-1), nil
 	}
 
 	return sum, err
 }
 
-func GreatestCommonDivisorInt(x, y int) int {
+func GreatestCommonDivisor[Z Zahl](x, y Z) Z {
 	if y == 0 {
 		return x
 	} else {
-		return GreatestCommonDivisorInt(y, x%y)
+		return GreatestCommonDivisor(y, x%y)
 	}
 }
 
-func GreatestCommonDivisorIntegers(vars ...int) (gcd int, err error) {
+func GreatestCommonDivisorIntegers[Z Zahl](vars ...Z) (gcd Z, err error) {
 	if len(vars) == 0 {
-		return -1, errors.New("vars length is 0")
+		return 0, errors.New("vars length is 0")
 	} else {
 		gcd, err = vars[0], nil
 
-		for i := 1; i < len(vars); i++ {
-			gcd = GreatestCommonDivisorInt(gcd, vars[i])
+		for _, v := range vars[1:] {
+			gcd = GreatestCommonDivisor(gcd, v)
 		}
 
 		return gcd, err
 	}
 }
 
-func LeastCommonMultipulInt(x, y int) int {
-	return x / GreatestCommonDivisorInt(x, y) * y
+func LeastCommonMultipul[Z Zahl](x, y Z) Z {
+	return x / GreatestCommonDivisor(x, y) * y
 }
 
-func LeastCommonMultipulIntegers(vars ...int) (lcm int, err error) {
+func LeastCommonMultipulIntegers[I Zahl](vars ...I) (lcm I, err error) {
 	if len(vars) == 0 {
-		return -1, errors.New("vars length is 0")
+		return 0, errors.New("vars length is 0")
 	} else {
 		lcm, err = vars[0], nil
 
-		for i := 1; i < len(vars); i++ {
-			lcm = LeastCommonMultipulInt(lcm, vars[i])
+		for _, v := range vars[1:] {
+			lcm = LeastCommonMultipul(lcm, v)
 		}
 
 		return lcm, nil
@@ -335,9 +382,7 @@ Comparison of Values
 - largest / smallest
 */
 
-// Get larger values
-
-func MaxInt(x, y int) int {
+func Max[R Real](x, y R) R {
 	if x >= y {
 		return x
 	} else {
@@ -345,156 +390,44 @@ func MaxInt(x, y int) int {
 	}
 }
 
-func MaxInt64(x, y int64) int64 {
+func Min[R Real](x, y R) R {
 	if x >= y {
-		return x
-	} else {
 		return y
+	} else {
+		return x
 	}
 }
 
-func MaxFloat64(x, y float64) float64 {
-	if x >= y {
-		return x
-	} else {
-		return y
-	}
-}
-
-func MaxIntegers(vars ...int) (int, error) {
+func MaxValues[R Real](vars ...R) (R, error) {
 	var (
-		res int
+		res R
 		err error
 	)
 
 	if len(vars) == 0 {
-		res, err = math.MaxInt32, errors.New("vars length is 0")
+		err = errors.New("length is 0")
 	} else {
-		res, err = vars[0], nil
-
-		for _, v := range vars {
-			res = MaxInt(res, v)
+		res = vars[0]
+		for _, v := range vars[1:] {
+			res = Max(res, v)
 		}
 	}
 
 	return res, err
 }
 
-func MaxInteger64s(vars ...int64) (int64, error) {
+func MinValues[R Real](vars ...R) (R, error) {
 	var (
-		res int64
+		res R
 		err error
 	)
 
 	if len(vars) == 0 {
-		res, err = math.MaxInt64, errors.New("vars length is 0")
+		err = errors.New("length is 0")
 	} else {
-		res, err = vars[0], nil
-
-		for _, v := range vars {
-			res = MaxInt64(res, v)
-		}
-	}
-
-	return res, err
-}
-
-func MaxFloat64s(vars ...float64) (float64, error) {
-	var (
-		res float64
-		err error
-	)
-
-	if len(vars) == 0 {
-		res, err = math.MaxFloat64, errors.New("vars length is 0")
-	} else {
-		res, err = vars[0], nil
-
-		for _, v := range vars {
-			res = MaxFloat64(res, v)
-		}
-	}
-
-	return res, err
-}
-
-// Get smaller values
-
-func MinInt(x, y int) int {
-	if x <= y {
-		return x
-	} else {
-		return y
-	}
-}
-
-func MinInt64(x, y int64) int64 {
-	if x <= y {
-		return x
-	} else {
-		return y
-	}
-}
-
-func MinFloat64(x, y float64) float64 {
-	if x <= y {
-		return x
-	} else {
-		return y
-	}
-}
-
-func MinIntegers(vars ...int) (int, error) {
-	var (
-		res int
-		err error
-	)
-
-	if len(vars) == 0 {
-		res, err = math.MinInt32, errors.New("vars length is 0")
-	} else {
-		res, err = vars[0], nil
-
-		for _, v := range vars {
-			res = MinInt(res, v)
-		}
-	}
-
-	return res, err
-}
-
-func MinInteger64s(vars ...int64) (int64, error) {
-	var (
-		res int64
-		err error
-	)
-
-	if len(vars) == 0 {
-		res, err = math.MinInt64, errors.New("vars length is 0")
-	} else {
-		res, err = vars[0], nil
-
-		for _, v := range vars {
-			res = MinInt64(res, v)
-		}
-	}
-
-	return res, err
-}
-
-func MinFloat64s(vars ...float64) (float64, error) {
-	var (
-		res float64
-		err error
-	)
-
-	if len(vars) == 0 {
-		res, err = math.MaxFloat64, errors.New("vars length is 0")
-	} else {
-		res, err = vars[0], nil
-
-		for _, v := range vars {
-			res = MinFloat64(res, v)
+		res = vars[0]
+		for _, v := range vars[1:] {
+			res = Min(res, v)
 		}
 	}
 
@@ -506,13 +439,12 @@ Search Algorithm
 - Binary Search
 */
 
-func BinarySearch(negative, positive, dist interface{},
-	IsContinue func(negative, positive, dist interface{}) bool,
-	HowToMiddle func(negative, positive interface{}) interface{},
-	IsPositive func(mid interface{}) bool) (interface{}, interface{}) {
+func BinarySearch[Z Zahl](negative, positive, dist Z,
+	IsContinue func(negative, positive, dist Z) bool,
+	IsPositive func(mid Z) bool) (Z, Z) {
 
 	for IsContinue(negative, positive, dist) {
-		mid := HowToMiddle(negative, positive)
+		mid := negative + Abs(positive-negative)/2
 
 		if IsPositive(mid) {
 			positive = mid
@@ -522,4 +454,35 @@ func BinarySearch(negative, positive, dist interface{},
 	}
 
 	return negative, positive
+}
+
+func MeasuringWormAlgorithm[Z Zahl](n Z,
+	isProgressive func(left, right Z) bool,
+	changeRight func(right Z),
+	changeLeft func(left Z)) (min, max, interval Z) {
+	var (
+		left, right Z
+	)
+
+	min = n + 1
+
+	for left = Z(0); left < n; left++ {
+		for right < n && isProgressive(left, right) {
+			changeRight(right)
+			right++
+		}
+
+		max = Max(max, right-left)
+		min = Min(min, right-left)
+		interval += Abs(right - left)
+
+		if left == right {
+			right++
+		} else {
+			changeLeft(left)
+		}
+
+	}
+
+	return min, max, interval
 }
