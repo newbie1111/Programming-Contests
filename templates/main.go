@@ -91,24 +91,6 @@ func dump(variable ...interface{}) {
 	}
 }
 
-func InputListSignedInteger[SI SignedInteger](sep string) ([]SI, error) {
-	var (
-		res []SI
-	)
-
-	for _, s := range strings.Split(input.Text(), sep) {
-		n, err := strconv.ParseInt(s, 10, 64)
-
-		if err != nil {
-			return []SI{}, err
-		}
-
-		res = append(res, SI(n))
-	}
-
-	return res, nil
-}
-
 /*
 Data Structures
 - Set
@@ -194,6 +176,7 @@ func (sq *SliceQueue[T]) Rotate(n int) {
 /*
 Character / String
 - String Reversal
+- string to integer slice
 */
 
 func ReverseString(s string) string {
@@ -204,6 +187,40 @@ func ReverseString(s string) string {
 	}
 
 	return string(runes)
+}
+
+func ParseSignedInts[SI SignedInteger](line, sep string) ([]SI, error) {
+	var (
+		splitWords = strings.Split(line, sep)
+		res        = make([]SI, 0, len(splitWords))
+	)
+
+	for _, v := range splitWords {
+		if n, err := strconv.ParseInt(v, 10, 64); err == nil {
+			res = append(res, SI(n))
+		} else {
+			return make([]SI, 0), errors.New("ParseSingedInts: Parse Error")
+		}
+	}
+
+	return res, nil
+}
+
+func ParseUnSignedInts[USI UnSignedInteger](line, sep string) ([]USI, error) {
+	var (
+		splitWords = strings.Split(line, sep)
+		res        = make([]USI, 0, len(splitWords))
+	)
+
+	for _, v := range splitWords {
+		if n, err := strconv.ParseUint(v, 10, 64); err == nil {
+			res = append(res, USI(n))
+		} else {
+			return make([]USI, 0), errors.New("ParseUnSingedInts: Parse Error")
+		}
+	}
+
+	return res, nil
 }
 
 /*
