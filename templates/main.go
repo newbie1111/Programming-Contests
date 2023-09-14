@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"reflect"
@@ -16,14 +17,14 @@ import (
 problem solver
 */
 
-func solve() any {
-	return nil
-}
-
 func main() {
 
 	ans := solve()
 	fmt.Println(ans)
+}
+
+func solve() any {
+	return nil
 }
 
 /*
@@ -32,7 +33,7 @@ initialize common variables
 
 var (
 	input             = bufio.NewScanner(os.Stdin)
-	output, debug     = log.New(os.Stdout, "", 0), log.New(os.Stderr, "DEBUG : ", log.Lshortfile)
+	output, debug     = log.New(os.Stdout, "", 0), log.New(io.Discard, "DEBUG : ", log.Lshortfile)
 	YES, Yes, yes     = "YES", "Yes", "yes"
 	NO, No, no        = "NO", "No", "no"
 	Even              = "Even"
@@ -300,7 +301,7 @@ func Divisors[Z Zahl](n Z) []Z {
 	return div
 }
 
-func isPrime[Z Zahl](n Z) bool {
+func IsPrime[Z Zahl](n Z) bool {
 	switch {
 	case n < 2:
 		return false
@@ -397,6 +398,7 @@ func LeastCommonMultipulIntegers[I Zahl](vars ...I) (lcm I, err error) {
 Comparison of Values
 - larger / smaller
 - largest / smallest
+- check all values
 */
 
 func Max[R Real](x, y R) R {
@@ -451,9 +453,20 @@ func MinValues[R Real](vars ...R) (R, error) {
 	return res, err
 }
 
+func CheckAllValues[T comparable](fn func(v T) bool, values ...T) bool {
+	res := true
+
+	for _, v := range values {
+		res = res && fn(v)
+	}
+
+	return res
+}
+
 /*
 Search Algorithm
 - Binary Search
+- Measuring Worm Algorithm
 */
 
 func BinarySearch[Z Zahl](negative, positive, dist Z,
