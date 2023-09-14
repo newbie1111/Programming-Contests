@@ -243,105 +243,14 @@ func InputListInt() ([]int, error) {
 	return res, nil
 }
 
-func solve(N, M int, A, B []int) interface{} {
-	var (
-		negative, positive = 0, int(math.Pow10(10))
-		buyers, sellers    = make([]int, M), make([]int, N)
-	)
-
-	copy(sellers, A)
-	copy(buyers, B)
-
-	for positive-negative > 1 {
-		var (
-			mid = negative + (positive-negative)>>1
-		)
-
-		isOk := func() bool {
-			var (
-				sell, buy int
-			)
-
-			for _, v := range sellers {
-				if v <= mid {
-					sell++
-				}
-			}
-
-			for _, v := range buyers {
-				if v >= mid {
-					buy++
-				}
-			}
-
-			return sell >= buy
-		}
-
-		if isOk() {
-			positive = mid
+func solve(A int, S string) interface{} {
+	return func() interface{} {
+		if A >= 3200 {
+			return S
 		} else {
-			negative = mid
+			return "red"
 		}
-	}
-
-	return positive
-}
-
-func BinarySearch(negative, positive, dist interface{},
-	IsContinue func(negative, positive, dist interface{}) bool,
-	HowToMiddle func(negative, positive interface{}) interface{},
-	IsPositive func(mid interface{}) bool,
-	IsReturnPositive bool) interface{} {
-
-	for IsContinue(negative, positive, dist) {
-		mid := HowToMiddle(negative, positive)
-
-		if IsPositive(mid) {
-			positive = mid
-		} else {
-			negative = mid
-		}
-	}
-
-	if IsReturnPositive {
-		return positive
-	} else {
-		return negative
-	}
-}
-
-func solve2(N, M int, A, B []int) interface{} {
-	var (
-		negative, positive = 0, int(1e10)
-	)
-
-	return BinarySearch(negative, positive, 1,
-		func(negative, positive, dist interface{}) bool {
-			return positive.(int)-negative.(int) > dist.(int)
-		},
-		func(negative, positive interface{}) interface{} {
-			return negative.(int) + (positive.(int)-negative.(int))>>1
-		},
-		func(mid interface{}) bool {
-			var (
-				sell, buy int
-			)
-
-			for _, v := range A {
-				if mid.(int) >= v {
-					sell++
-				}
-			}
-
-			for _, v := range B {
-				if mid.(int) <= v {
-					buy++
-				}
-			}
-
-			return sell >= buy
-		}, true).(int)
-
+	}()
 }
 
 func init() {
@@ -350,16 +259,11 @@ func init() {
 
 func main() {
 	var (
-		N, M int
-		A, B []int
+		A int
+		S string
 	)
 
-	fmt.Scan(&N, &M)
-	input.Scan()
-	A, _ = InputListInt()
-	input.Scan()
-	B, _ = InputListInt()
-
-	ans := solve2(N, M, A, B)
+	fmt.Scan(&A, &S)
+	ans := solve(A, S)
 	fmt.Println(ans)
 }

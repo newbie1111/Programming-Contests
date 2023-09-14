@@ -16,21 +16,157 @@ import (
 problem solver
 */
 
-func solve(N, K, X, Y int) interface{} {
-	if N <= K {
-		return X * N
-	} else {
-		return X*K + (N-K)*Y
+func solve(N, M int, H, A, B []int) interface{} {
+	debug.Println(N, M, H, A, B)
+
+	var (
+		graph = NewGraph()
+		stack = NewSliceStack()
+		ans   int
+	)
+
+	for id, height := range H {
+		node := NewNode()
+		node.height = height
+		graph.AddNode(id+1, node)
+		stack.Push(id + 1)
 	}
+
+	for i := 0; i < M; i++ {
+		succ := NewEdge()
+		pred := NewEdge()
+		succ.successors = append(succ.successors, B[i])
+		pred.successors = append(pred.successors, A[i])
+		graph.AddEdge(A[i], succ)
+		graph.AddEdge(B[i], pred)
+	}
+
+	for stack.Length() != 0 {
+		head := stack.Pop()
+		check := true
+
+		if graph.edges[head] == nil {
+			ans++
+			continue
+		}
+
+		for _, succ := range graph.edges[head].successors {
+			check = check && graph.nodes[head].height > graph.nodes[succ].height
+		}
+
+		debug.Println(check, head)
+		if check {
+			ans++
+		}
+	}
+
+	return ans
 }
 
 func main() {
 	var (
-		N, K, X, Y int
+		N, M    int
+		H, A, B []int
 	)
-	fmt.Scan(&N, &K, &X, &Y)
-	ans := solve(N, K, X, Y)
+	fmt.Scan(&N, &M)
+	input.Scan()
+	H, _ = InputListInt()
+	for input.Scan() {
+		line, _ := InputListInt()
+		A = append(A, line[0])
+		B = append(B, line[1])
+	}
+	ans := solve(N, M, H, A, B)
 	fmt.Println(ans)
+}
+
+type SliceStack struct {
+	stack []interface{}
+}
+
+func NewSliceStack(vars ...interface{}) *SliceStack {
+	stack := new(SliceStack)
+	stack.stack = append(make([]interface{}, 0), vars...)
+	return stack
+}
+
+func (stack *SliceStack) Push(val ...interface{}) {
+	stack.stack = append(stack.stack, val...)
+}
+
+func (stack *SliceStack) Pop() interface{} {
+	res := stack.stack[len(stack.stack)-1]
+	stack.stack = stack.stack[:len(stack.stack)-1]
+	return res
+}
+
+func (stack *SliceStack) Length() int {
+	return len(stack.stack)
+}
+
+type SliceQueue struct {
+	queue []interface{}
+}
+
+func NewSliceQueue(vars ...interface{}) *SliceQueue {
+	queue := new(SliceQueue)
+	queue.queue = append(make([]interface{}, 0), vars...)
+	return queue
+}
+
+func (queue *SliceQueue) Push(val ...interface{}) {
+	queue.queue = append(queue.queue, val...)
+}
+
+func (queue *SliceQueue) Pop() interface{} {
+	res := queue.queue[0]
+	queue.queue = queue.queue[1:]
+	return res
+}
+
+func (queue *SliceQueue) Length() int {
+	return len(queue.queue)
+}
+
+type Graph struct {
+	nodes map[interface{}]*Node
+	edges map[interface{}]*Edge
+}
+
+func NewGraph() Graph {
+	newGraph := new(Graph)
+	newGraph.nodes = make(map[interface{}]*Node)
+	newGraph.edges = make(map[interface{}]*Edge)
+	return *newGraph
+}
+
+func (g *Graph) AddNode(id interface{}, node *Node) {
+	g.nodes[id] = node
+}
+
+func (g *Graph) AddEdge(root interface{}, edge *Edge) {
+	if g.edges[root] == nil {
+		g.edges[root] = NewEdge()
+	}
+	g.edges[root].successors = append(g.edges[root].successors, edge.successors...)
+}
+
+type Node struct {
+	// if you want to add fields, you can do below.
+	height int
+}
+
+func NewNode() *Node {
+	return new(Node)
+}
+
+type Edge struct {
+	successors []interface{}
+	// if you want to add fields, you can do below.
+}
+
+func NewEdge() *Edge {
+	return new(Edge)
 }
 
 /*
@@ -79,31 +215,13 @@ func InputListInt() ([]int, error) {
 	return res, nil
 }
 
-func InputListInt64() ([]int64, error) {
-	var (
-		res []int64
-	)
-
-	for _, s := range strings.Split(input.Text(), " ") {
-		n, err := strconv.ParseInt(s, 0, 0)
-
-		if err != nil {
-			return []int64{}, err
-		}
-
-		res = append(res, n)
-	}
-
-	return res, nil
-}
-
 /*
 Data Structures
 */
 
-type Set map[int]bool
+type Set map[interface{}]bool
 
-func (st *Set) NewSet(vars ...int) *Set {
+func (st *Set) NewSet(vars ...interface{}) *Set {
 	var s = make(Set)
 	for _, v := range vars {
 		s[v] = true
@@ -111,8 +229,8 @@ func (st *Set) NewSet(vars ...int) *Set {
 	return &s
 }
 
-func (st *Set) SetKeys() []int {
-	var keys []int
+func (st *Set) SetKeys() []interface{} {
+	var keys []interface{}
 
 	for k, _ := range *st {
 		keys = append(keys, k)
@@ -121,9 +239,9 @@ func (st *Set) SetKeys() []int {
 	return keys
 }
 
-func (st *Set) Add(v int) { (*st)[v] = true }
+func (st *Set) Add(v interface{}) { (*st)[v] = true }
 
-func (st *Set) Exist(v int) bool { return (*st)[v] }
+func (st *Set) Exist(v interface{}) bool { return (*st)[v] }
 
 func (st *Set) Empty() bool { return len(*st) == 0 }
 
@@ -269,24 +387,6 @@ func SumInt64(vars ...int64) int64 {
 func CumulativeSumInt(vars []int) []int {
 	var (
 		cumsum = make([]int, len(vars))
-	)
-
-	if len(vars) != 0 {
-		copy(cumsum, vars)
-
-		for i, v := range vars[1:] {
-			index := i + 1
-			cumsum[index] = cumsum[index-1] + v
-		}
-
-	}
-
-	return cumsum
-}
-
-func CumulativeSumInt64(vars []int64) []int64 {
-	var (
-		cumsum = make([]int64, len(vars))
 	)
 
 	if len(vars) != 0 {
@@ -565,24 +665,4 @@ func BinarySearch(negative, positive, dist interface{},
 	}
 
 	return negative, positive
-}
-
-func MeasuringWormAlgorithm(n int, f func(right int) bool) int {
-	var (
-		left, right, ans int
-	)
-
-	for left = 0; left < n; left++ {
-		for ; right < n && f(right); right++ {
-			// Nothing to write about.
-		}
-
-		ans = MaxInt(ans, right-left)
-
-		if left == right {
-			right++
-		}
-	}
-
-	return ans
 }

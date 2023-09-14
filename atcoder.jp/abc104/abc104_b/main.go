@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"math"
@@ -9,6 +10,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"unicode"
 )
 
 var (
@@ -17,6 +19,8 @@ var (
 	NO, No, no       = "NO", "No", "no"
 	Even             = "Even"
 	Odd              = "Odd"
+	AC               = "AC"
+	WA               = "WA"
 	MAXINT, MAXINT64 = int(^uint(0) >> 1), int64(^uint64(0) >> 1)
 	MININT, MININT64 = -MAXINT - 1, -MAXINT64 - 1
 )
@@ -243,105 +247,95 @@ func InputListInt() ([]int, error) {
 	return res, nil
 }
 
-func solve(N, M int, A, B []int) interface{} {
-	var (
-		negative, positive = 0, int(math.Pow10(10))
-		buyers, sellers    = make([]int, M), make([]int, N)
-	)
-
-	copy(sellers, A)
-	copy(buyers, B)
-
-	for positive-negative > 1 {
-		var (
-			mid = negative + (positive-negative)>>1
-		)
-
-		isOk := func() bool {
-			var (
-				sell, buy int
-			)
-
-			for _, v := range sellers {
-				if v <= mid {
-					sell++
-				}
-			}
-
-			for _, v := range buyers {
-				if v >= mid {
-					buy++
-				}
-			}
-
-			return sell >= buy
-		}
-
-		if isOk() {
-			positive = mid
-		} else {
-			negative = mid
+func IsUpper(s string) bool {
+	// https://stackoverflow.com/questions/59293525/how-to-check-if-a-string-is-all-upper-or-lower-case-in-go
+	for _, v := range s {
+		if !unicode.IsUpper(v) && unicode.IsLetter(v) {
+			return false
 		}
 	}
-
-	return positive
+	return true
 }
 
-func BinarySearch(negative, positive, dist interface{},
-	IsContinue func(negative, positive, dist interface{}) bool,
-	HowToMiddle func(negative, positive interface{}) interface{},
-	IsPositive func(mid interface{}) bool,
-	IsReturnPositive bool) interface{} {
-
-	for IsContinue(negative, positive, dist) {
-		mid := HowToMiddle(negative, positive)
-
-		if IsPositive(mid) {
-			positive = mid
-		} else {
-			negative = mid
+func IsLower(s string) bool {
+	// https://stackoverflow.com/questions/59293525/how-to-check-if-a-string-is-all-upper-or-lower-case-in-go
+	for _, v := range s {
+		if !unicode.IsLower(v) && unicode.IsLetter(v) {
+			return false
 		}
 	}
+	return true
+}
 
-	if IsReturnPositive {
-		return positive
+func solve(S string) interface{} {
+	var (
+		check bool
+	)
+
+	check = S[0] == 'A'
+	// fmt.Println(check, S[0], S[0] == 'A')
+
+	check = check && bytes.Count([]byte(S[2:len(S)-2]), []byte("C")) == 1
+	// fmt.Println(
+	// 	check,
+	// 	[]byte(S[2:len(S)-2]),
+	// 	bytes.Count([]byte(S[2:len(S)-2]), []byte("C")),
+	// 	bytes.Count([]byte(S[2:len(S)-2]), []byte("C")) == 1,
+	// )
+
+	// golang >= 1.18
+	// before, after, found := bytes.Cut([]byte(S), []byte("C"))
+	// check = check && found && IsLower(string(before[1:])) && IsLower(string(after))
+	// fmt.Println(
+	// 	check,
+	// 	found,
+	// 	string(before),
+	// 	string(after),
+	// 	IsLower(string(before[1:])),
+	// 	IsLower(string(after)),
+	// 	check && found && IsLower(string(before[1:])) && IsLower(string(after)),
+	// )
+
+	sls := strings.Split(S[1:], "C")
+	check = check && len(sls) <= 2 && IsLower(strings.Join(sls, ""))
+	// fmt.Println(
+	// 	sls,
+	// 	check,
+	// 	strings.Join(sls, ""),
+	// )
+
+	if check {
+		return AC
 	} else {
-		return negative
+		return WA
 	}
 }
 
-func solve2(N, M int, A, B []int) interface{} {
+func solve2(S string) interface{} {
 	var (
-		negative, positive = 0, int(1e10)
+		cntc     int
+		check    bool
+		lowercnt int
 	)
 
-	return BinarySearch(negative, positive, 1,
-		func(negative, positive, dist interface{}) bool {
-			return positive.(int)-negative.(int) > dist.(int)
-		},
-		func(negative, positive interface{}) interface{} {
-			return negative.(int) + (positive.(int)-negative.(int))>>1
-		},
-		func(mid interface{}) bool {
-			var (
-				sell, buy int
-			)
-
-			for _, v := range A {
-				if mid.(int) >= v {
-					sell++
-				}
+	for i, v := range S {
+		switch {
+		case i == 0:
+			check = v == 'A'
+		case 2 <= i && i <= len(S)-2 && v == 'C':
+			cntc++
+		default:
+			if IsLower(string(v)) {
+				lowercnt++
 			}
+		}
+	}
 
-			for _, v := range B {
-				if mid.(int) <= v {
-					buy++
-				}
-			}
-
-			return sell >= buy
-		}, true).(int)
-
+	if check = check && cntc == 1 && lowercnt == len(S)-2; check {
+		return AC
+	} else {
+		return WA
+	}
 }
 
 func init() {
@@ -350,16 +344,10 @@ func init() {
 
 func main() {
 	var (
-		N, M int
-		A, B []int
+		S string
 	)
 
-	fmt.Scan(&N, &M)
-	input.Scan()
-	A, _ = InputListInt()
-	input.Scan()
-	B, _ = InputListInt()
-
-	ans := solve2(N, M, A, B)
+	fmt.Scan(&S)
+	ans := solve2(S)
 	fmt.Println(ans)
 }

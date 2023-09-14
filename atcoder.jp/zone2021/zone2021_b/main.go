@@ -174,6 +174,52 @@ func min_int_with_err(s []int) (int, error) {
 	return res, err
 }
 
+func MaxIntIndex(s []int) (int, error) {
+	var (
+		index  = -1
+		maxval = MININT
+		err    = errors.New("length is 0")
+	)
+
+	if len(s) == 0 {
+		return index, err
+	} else {
+		index = 0
+	}
+
+	for i, v := range s {
+		if maxval < v {
+			index = i
+			maxval = v
+		}
+	}
+
+	return index, nil
+}
+
+func MinIntIndex(s []int) (int, error) {
+	var (
+		index  = -1
+		minval = MAXINT
+		err    = errors.New("length is 0")
+	)
+
+	if len(s) == 0 {
+		return index, err
+	} else {
+		index = 0
+	}
+
+	for i, v := range s {
+		if minval > v {
+			index = i
+			minval = v
+		}
+	}
+
+	return index, nil
+}
+
 func ReverseString(s string) string {
 	runes := []rune(s)
 
@@ -243,48 +289,67 @@ func InputListInt() ([]int, error) {
 	return res, nil
 }
 
-func solve(N, M int, A, B []int) interface{} {
+func Float64Max(x, y float64) float64 {
+	if x >= y {
+		return x
+	} else {
+		return y
+	}
+}
+
+func Int64Max(x, y int64) int64 {
+	if x >= y {
+		return x
+	} else {
+		return y
+	}
+}
+
+func IntMax(x, y int) int {
+	if x >= y {
+		return x
+	} else {
+		return y
+	}
+}
+
+func solve(N, D, H float64, d, h []int) interface{} {
 	var (
-		negative, positive = 0, int(math.Pow10(10))
-		buyers, sellers    = make([]int, M), make([]int, N)
+		ans float64
 	)
 
-	copy(sellers, A)
-	copy(buyers, B)
+	for i := 0; i < int(N); i++ {
+		if H*float64(d[i])/D <= float64(h[i]) {
+			ans = Float64Max(ans, H-D*(H-float64(h[i]))/(D-float64(d[i])))
+		}
+	}
 
-	for positive-negative > 1 {
-		var (
-			mid = negative + (positive-negative)>>1
-		)
+	return ans
+}
 
-		isOk := func() bool {
-			var (
-				sell, buy int
-			)
+func solve2(N, D, H float64, d, h []int) interface{} {
+	var (
+		negative, positive = 0.0, 1000.0
+	)
 
-			for _, v := range sellers {
-				if v <= mid {
-					sell++
-				}
-			}
+	for positive-negative > 1e-6 {
+		mid := negative + (positive-negative)/2
+		check := true
 
-			for _, v := range buyers {
-				if v >= mid {
-					buy++
-				}
-			}
-
-			return sell >= buy
+		for i := 0; i < len(d); i++ {
+			// fmt.Println((H-mid)*float64(d[i])/D+mid, h[i])
+			check = check && (H-mid)*float64(d[i])/D+mid >= float64(h[i])
 		}
 
-		if isOk() {
+		if check {
 			positive = mid
 		} else {
 			negative = mid
 		}
+
 	}
 
-	return positive
+	return fmt.Sprintf("%.10f", positive)
 }
 
 func BinarySearch(negative, positive, dist interface{},
@@ -310,38 +375,37 @@ func BinarySearch(negative, positive, dist interface{},
 	}
 }
 
-func solve2(N, M int, A, B []int) interface{} {
+func solve3(N, D, H float64, d, h []int) interface{} {
 	var (
-		negative, positive = 0, int(1e10)
+		negative, positive = 0.0, 1000.0
+		ans                float64
 	)
 
-	return BinarySearch(negative, positive, 1,
+	ans = BinarySearch(negative, positive, 1e-6,
 		func(negative, positive, dist interface{}) bool {
-			return positive.(int)-negative.(int) > dist.(int)
+			l, r, e := negative.(float64), positive.(float64), dist.(float64)
+			return math.Abs(r-l) > e
 		},
 		func(negative, positive interface{}) interface{} {
-			return negative.(int) + (positive.(int)-negative.(int))>>1
+			l, r := negative.(float64), positive.(float64)
+			return l + (r-l)/2
 		},
 		func(mid interface{}) bool {
 			var (
-				sell, buy int
+				check = true
+				m     = mid.(float64)
 			)
 
-			for _, v := range A {
-				if mid.(int) >= v {
-					sell++
-				}
+			for i := 0; i < len(d); i++ {
+				check = check && (H-m)*float64(d[i])/D+m >= float64(h[i])
 			}
 
-			for _, v := range B {
-				if mid.(int) <= v {
-					buy++
-				}
-			}
+			return check
+		},
+		true,
+	).(float64)
 
-			return sell >= buy
-		}, true).(int)
-
+	return fmt.Sprintf("%.10f", ans)
 }
 
 func init() {
@@ -350,16 +414,20 @@ func init() {
 
 func main() {
 	var (
-		N, M int
-		A, B []int
+		N, D, H float64
+		d, h    []int
 	)
 
-	fmt.Scan(&N, &M)
-	input.Scan()
-	A, _ = InputListInt()
-	input.Scan()
-	B, _ = InputListInt()
-
-	ans := solve2(N, M, A, B)
+	fmt.Scan(&N, &D, &H)
+	for input.Scan() {
+		line, err := InputListInt()
+		if err == nil {
+			d = append(d, line[0])
+			h = append(h, line[1])
+		} else {
+			break
+		}
+	}
+	ans := solve3(N, D, H, d, h)
 	fmt.Println(ans)
 }

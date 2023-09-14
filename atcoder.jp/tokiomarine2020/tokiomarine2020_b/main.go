@@ -16,20 +16,25 @@ import (
 problem solver
 */
 
-func solve(N, K, X, Y int) interface{} {
-	if N <= K {
-		return X * N
+func solve(A, V, B, W, T int) interface{} {
+	var (
+		leftA, rightA = A - V*T, A + V*T
+		leftB, rightB = B - W*T, B + W*T
+	)
+
+	if leftA <= leftB && rightB <= rightA {
+		return YES
 	} else {
-		return X*K + (N-K)*Y
+		return NO
 	}
 }
 
 func main() {
 	var (
-		N, K, X, Y int
+		A, V, B, W, T int
 	)
-	fmt.Scan(&N, &K, &X, &Y)
-	ans := solve(N, K, X, Y)
+	fmt.Scan(&A, &V, &B, &W, &T)
+	ans := solve(A, V, B, W, T)
 	fmt.Println(ans)
 }
 
@@ -74,24 +79,6 @@ func InputListInt() ([]int, error) {
 		}
 
 		res = append(res, int(n))
-	}
-
-	return res, nil
-}
-
-func InputListInt64() ([]int64, error) {
-	var (
-		res []int64
-	)
-
-	for _, s := range strings.Split(input.Text(), " ") {
-		n, err := strconv.ParseInt(s, 0, 0)
-
-		if err != nil {
-			return []int64{}, err
-		}
-
-		res = append(res, n)
 	}
 
 	return res, nil
@@ -269,24 +256,6 @@ func SumInt64(vars ...int64) int64 {
 func CumulativeSumInt(vars []int) []int {
 	var (
 		cumsum = make([]int, len(vars))
-	)
-
-	if len(vars) != 0 {
-		copy(cumsum, vars)
-
-		for i, v := range vars[1:] {
-			index := i + 1
-			cumsum[index] = cumsum[index-1] + v
-		}
-
-	}
-
-	return cumsum
-}
-
-func CumulativeSumInt64(vars []int64) []int64 {
-	var (
-		cumsum = make([]int64, len(vars))
 	)
 
 	if len(vars) != 0 {
@@ -565,24 +534,4 @@ func BinarySearch(negative, positive, dist interface{},
 	}
 
 	return negative, positive
-}
-
-func MeasuringWormAlgorithm(n int, f func(right int) bool) int {
-	var (
-		left, right, ans int
-	)
-
-	for left = 0; left < n; left++ {
-		for ; right < n && f(right); right++ {
-			// Nothing to write about.
-		}
-
-		ans = MaxInt(ans, right-left)
-
-		if left == right {
-			right++
-		}
-	}
-
-	return ans
 }

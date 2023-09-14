@@ -225,6 +225,42 @@ func LCM(x, y int) int {
 	return x / GCD(x, y) * y
 }
 
+func SumInt(s []int) (sum int) {
+	for _, v := range s {
+		sum += v
+	}
+	return
+}
+
+func CumsumInt(s []int) (cumsum []int) {
+	for i, v := range s {
+		if i == 0 {
+			cumsum = append(cumsum, v)
+		} else {
+			cumsum = append(cumsum, v+cumsum[len(cumsum)-1])
+		}
+	}
+	return
+}
+
+func Sum_i64(s []int64) (sum int64) {
+	for _, v := range s {
+		sum += v
+	}
+	return
+}
+
+func Cumsum_i64(s []int64) (cumsum []int64) {
+	for i, v := range s {
+		if i == 0 {
+			cumsum = append(cumsum, v)
+		} else {
+			cumsum = append(cumsum, v+cumsum[len(cumsum)-1])
+		}
+	}
+	return
+}
+
 func InputListInt() ([]int, error) {
 	var (
 		res []int
@@ -243,105 +279,34 @@ func InputListInt() ([]int, error) {
 	return res, nil
 }
 
-func solve(N, M int, A, B []int) interface{} {
+func EuclidDistanceInt(X, Y []int) float64 {
 	var (
-		negative, positive = 0, int(math.Pow10(10))
-		buyers, sellers    = make([]int, M), make([]int, N)
+		dist float64
 	)
 
-	copy(sellers, A)
-	copy(buyers, B)
-
-	for positive-negative > 1 {
-		var (
-			mid = negative + (positive-negative)>>1
-		)
-
-		isOk := func() bool {
-			var (
-				sell, buy int
-			)
-
-			for _, v := range sellers {
-				if v <= mid {
-					sell++
-				}
-			}
-
-			for _, v := range buyers {
-				if v >= mid {
-					buy++
-				}
-			}
-
-			return sell >= buy
-		}
-
-		if isOk() {
-			positive = mid
-		} else {
-			negative = mid
-		}
+	for i := 0; i < min_int([]int{len(X), len(Y)}); i++ {
+		dist += math.Pow(float64(Y[i])-float64(X[i]), 2)
 	}
 
-	return positive
+	return math.Sqrt(dist)
 }
 
-func BinarySearch(negative, positive, dist interface{},
-	IsContinue func(negative, positive, dist interface{}) bool,
-	HowToMiddle func(negative, positive interface{}) interface{},
-	IsPositive func(mid interface{}) bool,
-	IsReturnPositive bool) interface{} {
-
-	for IsContinue(negative, positive, dist) {
-		mid := HowToMiddle(negative, positive)
-
-		if IsPositive(mid) {
-			positive = mid
-		} else {
-			negative = mid
-		}
-	}
-
-	if IsReturnPositive {
-		return positive
-	} else {
-		return negative
-	}
-}
-
-func solve2(N, M int, A, B []int) interface{} {
+func solve(N, D int, X [][]int) interface{} {
 	var (
-		negative, positive = 0, int(1e10)
+		cnt int
 	)
 
-	return BinarySearch(negative, positive, 1,
-		func(negative, positive, dist interface{}) bool {
-			return positive.(int)-negative.(int) > dist.(int)
-		},
-		func(negative, positive interface{}) interface{} {
-			return negative.(int) + (positive.(int)-negative.(int))>>1
-		},
-		func(mid interface{}) bool {
-			var (
-				sell, buy int
-			)
-
-			for _, v := range A {
-				if mid.(int) >= v {
-					sell++
-				}
+	for i := 0; i < N; i++ {
+		for j := i + 1; j < N; j++ {
+			dist := EuclidDistanceInt(X[i], X[j])
+			if float64(int(dist)) == dist {
+				cnt++
 			}
+		}
 
-			for _, v := range B {
-				if mid.(int) <= v {
-					buy++
-				}
-			}
+	}
 
-			return sell >= buy
-		}, true).(int)
-
+	return cnt
 }
 
 func init() {
@@ -350,16 +315,16 @@ func init() {
 
 func main() {
 	var (
-		N, M int
-		A, B []int
+		N, D int
+		X    [][]int
 	)
 
-	fmt.Scan(&N, &M)
-	input.Scan()
-	A, _ = InputListInt()
-	input.Scan()
-	B, _ = InputListInt()
+	fmt.Scan(&N, &D)
+	for input.Scan() {
+		line, _ := InputListInt()
+		X = append(X, line)
+	}
 
-	ans := solve2(N, M, A, B)
+	ans := solve(N, D, X)
 	fmt.Println(ans)
 }

@@ -16,20 +16,37 @@ import (
 problem solver
 */
 
-func solve(N, K, X, Y int) interface{} {
-	if N <= K {
-		return X * N
-	} else {
-		return X*K + (N-K)*Y
+func solve(N int, A []float64) interface{} {
+	var (
+		ave   = SumFloat64(A...) / float64(len(A))
+		dist  = 100.0
+		index = 0
+	)
+
+	for i, v := range A {
+		if dist > AbsFloat64(v-ave) {
+			dist = AbsFloat64(v - ave)
+			index = i
+		}
 	}
+
+	return index
 }
 
 func main() {
 	var (
-		N, K, X, Y int
+		N int
+		A []float64
 	)
-	fmt.Scan(&N, &K, &X, &Y)
-	ans := solve(N, K, X, Y)
+
+	fmt.Scan(&N)
+	input.Scan()
+	Aint, _ := InputListInt()
+	for _, v := range Aint {
+		A = append(A, float64(v))
+	}
+
+	ans := solve(N, A)
 	fmt.Println(ans)
 }
 
@@ -257,6 +274,18 @@ func SumInt(vars ...int) int {
 func SumInt64(vars ...int64) int64 {
 	var (
 		sum int64
+	)
+
+	for _, v := range vars {
+		sum += v
+	}
+
+	return sum
+}
+
+func SumFloat64(vars ...float64) float64 {
+	var (
+		sum float64
 	)
 
 	for _, v := range vars {

@@ -243,50 +243,6 @@ func InputListInt() ([]int, error) {
 	return res, nil
 }
 
-func solve(N, M int, A, B []int) interface{} {
-	var (
-		negative, positive = 0, int(math.Pow10(10))
-		buyers, sellers    = make([]int, M), make([]int, N)
-	)
-
-	copy(sellers, A)
-	copy(buyers, B)
-
-	for positive-negative > 1 {
-		var (
-			mid = negative + (positive-negative)>>1
-		)
-
-		isOk := func() bool {
-			var (
-				sell, buy int
-			)
-
-			for _, v := range sellers {
-				if v <= mid {
-					sell++
-				}
-			}
-
-			for _, v := range buyers {
-				if v >= mid {
-					buy++
-				}
-			}
-
-			return sell >= buy
-		}
-
-		if isOk() {
-			positive = mid
-		} else {
-			negative = mid
-		}
-	}
-
-	return positive
-}
-
 func BinarySearch(negative, positive, dist interface{},
 	IsContinue func(negative, positive, dist interface{}) bool,
 	HowToMiddle func(negative, positive interface{}) interface{},
@@ -310,38 +266,32 @@ func BinarySearch(negative, positive, dist interface{},
 	}
 }
 
-func solve2(N, M int, A, B []int) interface{} {
-	var (
-		negative, positive = 0, int(1e10)
-	)
+func toRadian(ang float64) float64 {
+	return ang * math.Pi / 180
+}
 
-	return BinarySearch(negative, positive, 1,
+func solve(a, b, x float64) interface{} {
+	return BinarySearch(0.0, 90.0, 1e-7,
 		func(negative, positive, dist interface{}) bool {
-			return positive.(int)-negative.(int) > dist.(int)
+			return math.Abs(positive.(float64)-negative.(float64)) > dist.(float64)
 		},
 		func(negative, positive interface{}) interface{} {
-			return negative.(int) + (positive.(int)-negative.(int))>>1
+			return negative.(float64) + (positive.(float64)-negative.(float64))/2
 		},
 		func(mid interface{}) bool {
-			var (
-				sell, buy int
-			)
+			rad := toRadian(mid.(float64))
+			v := a * a * b
 
-			for _, v := range A {
-				if mid.(int) >= v {
-					sell++
-				}
+			if a*math.Tan(rad) <= b {
+				brank := a * a * a * math.Tan(rad) / 2
+				return (v - brank) < x
+			} else {
+				water := b * b * a / (math.Tan(rad) * 2)
+				return water < x
 			}
-
-			for _, v := range B {
-				if mid.(int) <= v {
-					buy++
-				}
-			}
-
-			return sell >= buy
-		}, true).(int)
-
+		},
+		true,
+	).(float64)
 }
 
 func init() {
@@ -350,16 +300,9 @@ func init() {
 
 func main() {
 	var (
-		N, M int
-		A, B []int
+		a, b, x float64
 	)
-
-	fmt.Scan(&N, &M)
-	input.Scan()
-	A, _ = InputListInt()
-	input.Scan()
-	B, _ = InputListInt()
-
-	ans := solve2(N, M, A, B)
+	fmt.Scan(&a, &b, &x)
+	ans := solve(a, b, x)
 	fmt.Println(ans)
 }

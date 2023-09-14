@@ -16,20 +16,36 @@ import (
 problem solver
 */
 
-func solve(N, K, X, Y int) interface{} {
-	if N <= K {
-		return X * N
-	} else {
-		return X*K + (N-K)*Y
+func solve(n int, s string) interface{} {
+	var (
+		ans int
+	)
+	for i := 0; i < len(s); i++ {
+		leftSet, rightSet := NewSet(), NewSet()
+
+		for j, v := range s {
+			if j <= i {
+				leftSet.Add(v)
+			} else {
+				rightSet.Add(v)
+			}
+		}
+
+		// debug.Println(leftSet, rightSet)
+		ans = MaxInt(ans, len(leftSet.Intersection(*rightSet)))
 	}
+
+	return ans
 }
 
 func main() {
 	var (
-		N, K, X, Y int
+		n int
+		s string
 	)
-	fmt.Scan(&N, &K, &X, &Y)
-	ans := solve(N, K, X, Y)
+
+	fmt.Scan(&n, &s)
+	ans := solve(n, s)
 	fmt.Println(ans)
 }
 
@@ -79,31 +95,13 @@ func InputListInt() ([]int, error) {
 	return res, nil
 }
 
-func InputListInt64() ([]int64, error) {
-	var (
-		res []int64
-	)
-
-	for _, s := range strings.Split(input.Text(), " ") {
-		n, err := strconv.ParseInt(s, 0, 0)
-
-		if err != nil {
-			return []int64{}, err
-		}
-
-		res = append(res, n)
-	}
-
-	return res, nil
-}
-
 /*
 Data Structures
 */
 
-type Set map[int]bool
+type Set map[interface{}]bool
 
-func (st *Set) NewSet(vars ...int) *Set {
+func NewSet(vars ...interface{}) *Set {
 	var s = make(Set)
 	for _, v := range vars {
 		s[v] = true
@@ -111,8 +109,8 @@ func (st *Set) NewSet(vars ...int) *Set {
 	return &s
 }
 
-func (st *Set) SetKeys() []int {
-	var keys []int
+func (st *Set) SetKeys() []interface{} {
+	var keys []interface{}
 
 	for k, _ := range *st {
 		keys = append(keys, k)
@@ -121,20 +119,20 @@ func (st *Set) SetKeys() []int {
 	return keys
 }
 
-func (st *Set) Add(v int) { (*st)[v] = true }
+func (st *Set) Add(v interface{}) { (*st)[v] = true }
 
-func (st *Set) Exist(v int) bool { return (*st)[v] }
+func (st *Set) Exist(v interface{}) bool { return (*st)[v] }
 
 func (st *Set) Empty() bool { return len(*st) == 0 }
 
 func (st *Set) Union(y Set) Set {
 	var res = make(Set)
 
-	for k, _ := range *st {
+	for k := range *st {
 		res[k] = true
 	}
 
-	for k, _ := range y {
+	for k := range y {
 		res[k] = true
 	}
 
@@ -144,7 +142,7 @@ func (st *Set) Union(y Set) Set {
 func (st *Set) Difference(y Set) Set {
 	var res = make(Set)
 
-	for k, _ := range *st {
+	for k := range *st {
 		if !y[k] {
 			res[k] = true
 		}
@@ -156,7 +154,7 @@ func (st *Set) Difference(y Set) Set {
 func (st *Set) Intersection(y Set) Set {
 	var res = make(Set)
 
-	for k, _ := range *st {
+	for k := range *st {
 		if y[k] {
 			res[k] = true
 		}
@@ -269,24 +267,6 @@ func SumInt64(vars ...int64) int64 {
 func CumulativeSumInt(vars []int) []int {
 	var (
 		cumsum = make([]int, len(vars))
-	)
-
-	if len(vars) != 0 {
-		copy(cumsum, vars)
-
-		for i, v := range vars[1:] {
-			index := i + 1
-			cumsum[index] = cumsum[index-1] + v
-		}
-
-	}
-
-	return cumsum
-}
-
-func CumulativeSumInt64(vars []int64) []int64 {
-	var (
-		cumsum = make([]int64, len(vars))
 	)
 
 	if len(vars) != 0 {
@@ -565,24 +545,4 @@ func BinarySearch(negative, positive, dist interface{},
 	}
 
 	return negative, positive
-}
-
-func MeasuringWormAlgorithm(n int, f func(right int) bool) int {
-	var (
-		left, right, ans int
-	)
-
-	for left = 0; left < n; left++ {
-		for ; right < n && f(right); right++ {
-			// Nothing to write about.
-		}
-
-		ans = MaxInt(ans, right-left)
-
-		if left == right {
-			right++
-		}
-	}
-
-	return ans
 }

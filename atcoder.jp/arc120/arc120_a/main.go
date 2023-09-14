@@ -16,20 +16,31 @@ import (
 problem solver
 */
 
-func solve(N, K, X, Y int) interface{} {
-	if N <= K {
-		return X * N
-	} else {
-		return X*K + (N-K)*Y
+func solve(N int, A []int64) interface{} {
+	var (
+		max int64
+		sum int64
+		ans []string
+	)
+
+	for _, v := range A {
+		max = MaxInt64(max, v)
+		sum += v
 	}
+
+	return strings.Join(ans, "\n")
 }
 
 func main() {
 	var (
-		N, K, X, Y int
+		N int
+		A []int64
 	)
-	fmt.Scan(&N, &K, &X, &Y)
-	ans := solve(N, K, X, Y)
+
+	fmt.Scan(&N)
+	input.Scan()
+	A, _ = InputListInt64()
+	ans := solve(N, A)
 	fmt.Println(ans)
 }
 
@@ -284,6 +295,21 @@ func CumulativeSumInt(vars []int) []int {
 	return cumsum
 }
 
+func ArithmeticProgressionsSumInt(a0, d, n int) (sum int64, err error) {
+	if n < 0 {
+		sum, err = 0, errors.New("number of terms must not be negative.")
+	} else {
+		var (
+			a0_i64 = int64(a0)
+			d_i64  = int64(d)
+			n_i64  = int64(n)
+		)
+		sum, err = (a0_i64*n_i64)+n_i64*(n_i64-1)/2*d_i64, nil
+	}
+
+	return sum, err
+}
+
 func CumulativeSumInt64(vars []int64) []int64 {
 	var (
 		cumsum = make([]int64, len(vars))
@@ -300,21 +326,6 @@ func CumulativeSumInt64(vars []int64) []int64 {
 	}
 
 	return cumsum
-}
-
-func ArithmeticProgressionsSumInt(a0, d, n int) (sum int64, err error) {
-	if n < 0 {
-		sum, err = 0, errors.New("number of terms must not be negative.")
-	} else {
-		var (
-			a0_i64 = int64(a0)
-			d_i64  = int64(d)
-			n_i64  = int64(n)
-		)
-		sum, err = (a0_i64*n_i64)+n_i64*(n_i64-1)/2*d_i64, nil
-	}
-
-	return sum, err
 }
 
 func GeometicProgressionsSumInt(a0, r, n int) (sum int64, err error) {
@@ -565,24 +576,4 @@ func BinarySearch(negative, positive, dist interface{},
 	}
 
 	return negative, positive
-}
-
-func MeasuringWormAlgorithm(n int, f func(right int) bool) int {
-	var (
-		left, right, ans int
-	)
-
-	for left = 0; left < n; left++ {
-		for ; right < n && f(right); right++ {
-			// Nothing to write about.
-		}
-
-		ans = MaxInt(ans, right-left)
-
-		if left == right {
-			right++
-		}
-	}
-
-	return ans
 }

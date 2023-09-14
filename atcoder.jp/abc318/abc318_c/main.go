@@ -8,6 +8,7 @@ import (
 	"math"
 	"os"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -16,20 +17,73 @@ import (
 problem solver
 */
 
-func solve(N, K, X, Y int) interface{} {
-	if N <= K {
-		return X * N
-	} else {
-		return X*K + (N-K)*Y
+func solve(n, d, p int64, f []int64) interface{} {
+	var (
+		expensive, cheap []int64
+		ans              int64
+	)
+
+	for _, v := range f {
+		if v*d >= p {
+			expensive = append(expensive, v)
+		} else {
+			cheap = append(cheap, v)
+		}
 	}
+
+	sort.Slice(expensive, func(i, j int) bool { return expensive[i] > expensive[j] })
+	sort.Slice(cheap, func(i, j int) bool { return cheap[i] > cheap[j] })
+
+	debug.Println(expensive)
+	debug.Println(cheap)
+
+	ans += SumInt64(cheap...)
+
+	remain := (len(expensive) / int(d)) * int(d)
+	ans += (int64(remain) / d) * p
+	expensive = expensive[remain:]
+
+	debug.Println(expensive)
+
+	if SumInt64(expensive...) >= p {
+		ans += p
+	} else {
+		ans += SumInt64(expensive...)
+	}
+
+	return ans
+}
+
+func solve2(n, d, p int64, f []int64) interface{} {
+	sort.Slice(f, func(i, j int) bool { return f[i] < f[j] })
+
+	var (
+		cumsum = CumulativeSumInt64(f)
+		k      = (n + d - 1) / d
+		ans    = k * p
+	)
+
+	debug.Println(f)
+	debug.Println(cumsum)
+
+	for i := int64(0); i < k; i++ {
+		ans = MinInt64(ans, i*p+cumsum[n-i*d-1])
+	}
+
+	return ans
 }
 
 func main() {
 	var (
-		N, K, X, Y int
+		n, d, p int64
+		f       []int64
 	)
-	fmt.Scan(&N, &K, &X, &Y)
-	ans := solve(N, K, X, Y)
+
+	fmt.Scan(&n, &d, &p)
+	input.Scan()
+	f, _ = InputListInt64()
+
+	ans := solve2(n, d, p, f)
 	fmt.Println(ans)
 }
 
@@ -85,7 +139,7 @@ func InputListInt64() ([]int64, error) {
 	)
 
 	for _, s := range strings.Split(input.Text(), " ") {
-		n, err := strconv.ParseInt(s, 0, 0)
+		n, err := strconv.ParseInt(s, 0, 64)
 
 		if err != nil {
 			return []int64{}, err
@@ -565,24 +619,4 @@ func BinarySearch(negative, positive, dist interface{},
 	}
 
 	return negative, positive
-}
-
-func MeasuringWormAlgorithm(n int, f func(right int) bool) int {
-	var (
-		left, right, ans int
-	)
-
-	for left = 0; left < n; left++ {
-		for ; right < n && f(right); right++ {
-			// Nothing to write about.
-		}
-
-		ans = MaxInt(ans, right-left)
-
-		if left == right {
-			right++
-		}
-	}
-
-	return ans
 }

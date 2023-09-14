@@ -16,20 +16,60 @@ import (
 problem solver
 */
 
-func solve(N, K, X, Y int) interface{} {
-	if N <= K {
-		return X * N
-	} else {
-		return X*K + (N-K)*Y
+func outOfBounds(x, y, h, w int) bool {
+	return !(0 <= x && x < w && 0 <= y && y < h)
+}
+
+func solve(h, w int, s []string) interface{} {
+	var (
+		mines             [][]int
+		ans               []string
+		EightDirection2dx = [][]int{{0, 1}, {0, -1}, {1, 0}, {-1, 0}, {1, 1}, {-1, -1}, {1, -1}, {-1, 1}}
+	)
+
+	for i := 0; i < h; i++ {
+		mines = append(mines, make([]int, w))
 	}
+
+	for y, line := range s {
+		for x, r := range line {
+			if r == '#' {
+				for _, dxdy := range EightDirection2dx {
+					dx, dy := x+dxdy[0], y+dxdy[1]
+					// debug.Println(x, y, dx, dy)
+					if !outOfBounds(dx, dy, h, w) {
+						mines[dy][dx]++
+					}
+				}
+			}
+		}
+	}
+	for y, line := range s {
+		var ln string
+		for x, r := range line {
+			if r == '#' {
+				ln += "#"
+			} else {
+				ln += strconv.FormatInt(int64(mines[y][x]), 10)
+			}
+		}
+		ans = append(ans, ln)
+	}
+
+	return strings.Join(ans, "\n")
 }
 
 func main() {
 	var (
-		N, K, X, Y int
+		h, w int
+		s    []string
 	)
-	fmt.Scan(&N, &K, &X, &Y)
-	ans := solve(N, K, X, Y)
+
+	fmt.Scan(&h, &w)
+	for input.Scan() {
+		s = append(s, input.Text())
+	}
+	ans := solve(h, w, s)
 	fmt.Println(ans)
 }
 
@@ -74,24 +114,6 @@ func InputListInt() ([]int, error) {
 		}
 
 		res = append(res, int(n))
-	}
-
-	return res, nil
-}
-
-func InputListInt64() ([]int64, error) {
-	var (
-		res []int64
-	)
-
-	for _, s := range strings.Split(input.Text(), " ") {
-		n, err := strconv.ParseInt(s, 0, 0)
-
-		if err != nil {
-			return []int64{}, err
-		}
-
-		res = append(res, n)
 	}
 
 	return res, nil
@@ -269,24 +291,6 @@ func SumInt64(vars ...int64) int64 {
 func CumulativeSumInt(vars []int) []int {
 	var (
 		cumsum = make([]int, len(vars))
-	)
-
-	if len(vars) != 0 {
-		copy(cumsum, vars)
-
-		for i, v := range vars[1:] {
-			index := i + 1
-			cumsum[index] = cumsum[index-1] + v
-		}
-
-	}
-
-	return cumsum
-}
-
-func CumulativeSumInt64(vars []int64) []int64 {
-	var (
-		cumsum = make([]int64, len(vars))
 	)
 
 	if len(vars) != 0 {
@@ -565,24 +569,4 @@ func BinarySearch(negative, positive, dist interface{},
 	}
 
 	return negative, positive
-}
-
-func MeasuringWormAlgorithm(n int, f func(right int) bool) int {
-	var (
-		left, right, ans int
-	)
-
-	for left = 0; left < n; left++ {
-		for ; right < n && f(right); right++ {
-			// Nothing to write about.
-		}
-
-		ans = MaxInt(ans, right-left)
-
-		if left == right {
-			right++
-		}
-	}
-
-	return ans
 }
