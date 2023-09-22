@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"flag"
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -18,12 +17,16 @@ problem solver
 */
 
 func main() {
+	var ()
 
 	ans := solve()
-	fmt.Println(ans)
+	output.Println(ans)
 }
 
 func solve() any {
+	debug.Println()
+	var ()
+
 	return nil
 }
 
@@ -32,8 +35,11 @@ initialize common variables
 */
 
 var (
-	input             = bufio.NewScanner(os.Stdin)
-	output, debug     = log.New(os.Stdout, "", 0), log.New(io.Discard, "DEBUG : ", log.Lshortfile)
+	input         = bufio.NewScanner(os.Stdin)
+	output, debug = log.New(os.Stdout, "", 0), log.New(io.Discard, "DEBUG : ", log.Lshortfile)
+)
+
+const (
 	YES, Yes, yes     = "YES", "Yes", "yes"
 	NO, No, no        = "NO", "No", "no"
 	Even              = "Even"
@@ -72,10 +78,11 @@ type Zahl interface {
 }
 
 type SignedInteger interface {
-	int | int32 | int64
+	int | int8 | int16 | int32 | int64
 }
+
 type UnSignedInteger interface {
-	uint | uint32 | uint64
+	uint | uint8 | uint16 | uint32 | uint64
 }
 
 type Float interface {
@@ -96,6 +103,9 @@ func dump(variable ...interface{}) {
 Data Structures
 - Set
 - Queue
+- Circular Queue
+- Vector
+- Matrix
 */
 
 type Set[T comparable] map[T]struct{}
@@ -174,10 +184,215 @@ func (sq *SliceQueue[T]) Rotate(n int) {
 	}
 }
 
+type CircularQueue[Any any] struct {
+	head, tail int
+	cq         []Any
+}
+
+func NewCircularQueue[Any any]() CircularQueue[Any] {
+	newCircularQueue := *new(CircularQueue[Any])
+	newCircularQueue.InIt()
+	return newCircularQueue
+}
+
+func (cq *CircularQueue[Any]) InIt() {
+	cq.head, cq.tail = 0, 0
+	cq.cq = make([]Any, 1)
+}
+
+func (cq *CircularQueue[Any]) nextIndex(index int) int {
+	return (index + 1) % len(cq.cq)
+
+}
+
+func (cq *CircularQueue[Any]) previousIndex(index int) int {
+	return (len(cq.cq) + index - 1) % len(cq.cq)
+
+}
+
+func (cq *CircularQueue[Any]) Full() bool {
+	return cq.head == cq.nextIndex(cq.tail)
+}
+
+func (cq *CircularQueue[Any]) Empty() bool {
+	return cq.head == cq.tail
+}
+
+func (cq *CircularQueue[Any]) Length() int {
+	return Abs(cq.tail - cq.head)
+}
+
+func (cq *CircularQueue[Any]) toSlice() []Any {
+	res := make([]Any, 0, cq.Length())
+	for i := cq.head; i != cq.tail; i = cq.nextIndex(i) {
+		res = append(res, cq.cq[i])
+	}
+	return res
+}
+
+func (cq *CircularQueue[Any]) PushLeft(x Any) {
+	if cq.Full() {
+		prevCQ := cq.toSlice()
+		newCQ := make([]Any, len(cq.cq)<<1)
+
+		newCQ[0] = x
+		copy(newCQ[1:], prevCQ)
+
+		cq.head, cq.tail = 0, len(prevCQ)+1
+		cq.cq = newCQ
+	} else {
+		cq.head = cq.previousIndex(cq.head)
+		cq.cq[cq.head] = x
+	}
+
+}
+
+func (cq *CircularQueue[Any]) PushRight(x Any) {
+	if cq.Full() {
+		prevCQ := cq.toSlice()
+		newCQ := make([]Any, len(cq.cq)<<1)
+
+		copy(newCQ, prevCQ)
+		newCQ[len(prevCQ)] = x
+
+		cq.head, cq.tail = 0, len(prevCQ)+1
+		cq.cq = newCQ
+	} else {
+		cq.cq[cq.tail] = x
+		cq.tail = cq.nextIndex(cq.tail)
+	}
+
+}
+
+func (cq *CircularQueue[Any]) At(index int) Any {
+	return cq.cq[(cq.head+index)%len(cq.cq)]
+}
+
+type Vector[R Real] []R
+
+func NewVector[R Real](v ...R) Vector[R] {
+	newVec := new(Vector[R]).InIt(len(v))
+	copy(newVec, v)
+	return newVec
+}
+
+func (v *Vector[R]) InIt(dim int) Vector[R] {
+	return make(Vector[R], dim)
+}
+
+func (v *Vector[R]) Reshape(dim int) Vector[R] {
+	nv := new(Vector[R]).InIt(dim)
+	copy(nv, *v)
+	return nv
+}
+
+func (v *Vector[R]) Dimension() int {
+	return len(*v)
+}
+
+func (v *Vector[R]) ScalarAdd(n R) {
+	for i := 0; i < v.Dimension(); i++ {
+		(*v)[i] += n
+	}
+}
+
+func (v *Vector[R]) ScalarSubtract(n R) {
+	for i := 0; i < v.Dimension(); i++ {
+		(*v)[i] -= n
+	}
+}
+
+func (v *Vector[R]) Difference(diff Vector[R]) Vector[R] {
+	nv := NewVector[R](*v...)
+
+	if v.Dimension() != diff.Dimension() {
+		nv.Reshape(Max(v.Dimension(), diff.Dimension()))
+	}
+
+	for index, value := range diff {
+		nv[index] -= value
+	}
+
+	return nv
+}
+
+func (v *Vector[R]) ScalarMultipul(n R) {
+	for i := 0; i < v.Dimension(); i++ {
+		(*v)[i] *= n
+	}
+}
+
+func (v *Vector[R]) ScalarDivide(n R) {
+	for i := 0; i < v.Dimension(); i++ {
+		(*v)[i] /= n
+	}
+}
+
+type Matrix[R Real] []Vector[R]
+
+func NewMatrix[R Real](rows ...[]R) Matrix[R] {
+	maxDim := 0
+	for _, row := range rows {
+		maxDim = Max(maxDim, len(row))
+	}
+
+	newMat := new(Matrix[R]).InIt(len(rows), maxDim)
+	for i, row := range rows {
+		copy(newMat[i], row)
+	}
+
+	return newMat
+}
+
+func (mat *Matrix[R]) InIt(row, col int) Matrix[R] {
+	newMat := make(Matrix[R], 0, row*col)
+	for i := 0; i < row; i++ {
+		rowVector := NewVector[R]()
+		rowVector.Reshape(col)
+		newMat = append(newMat, rowVector)
+	}
+	return newMat
+}
+
+func (mat *Matrix[R]) Size() int {
+	if len(*mat) == 0 {
+		return 0
+	} else {
+		return len(*mat) * len((*mat)[0])
+	}
+}
+
+func (mat *Matrix[R]) Dimension() (int, int) {
+	if mat.Size() == 0 {
+		return 0, 0
+	} else {
+		return len(*mat), len((*mat)[0])
+	}
+}
+
+func (mat *Matrix[R]) RowAt(index int) Vector[R] {
+	row := (*mat)[index][:]
+	return NewVector(row...)
+}
+
+func (mat *Matrix[R]) ColAt(index int) Vector[R] {
+	var (
+		r, _ = mat.Dimension()
+		col  = new(Vector[R]).InIt(r)
+	)
+
+	for i, vec := range *mat {
+		col[i] = vec[index]
+	}
+
+	return col
+}
+
 /*
 Character / String
 - String Reversal
 - string to integer slice
+- integer slice to string
 */
 
 func ReverseString(s string) string {
@@ -207,6 +422,18 @@ func ParseSignedInts[SI SignedInteger](line, sep string) ([]SI, error) {
 	return res, nil
 }
 
+func FormatSignedInts[SI SignedInteger](s []SI, base int, sep string) string {
+	var (
+		res []string
+	)
+
+	for _, v := range s {
+		res = append(res, strconv.FormatInt(int64(v), base))
+	}
+
+	return strings.Join(res, sep)
+}
+
 func ParseUnSignedInts[USI UnSignedInteger](line, sep string) ([]USI, error) {
 	var (
 		splitWords = strings.Split(line, sep)
@@ -228,6 +455,7 @@ func ParseUnSignedInts[USI UnSignedInteger](line, sep string) ([]USI, error) {
 Convert value
 - Absolute value
 - Power
+- Ceil
 */
 
 // return absolute integer
@@ -254,9 +482,15 @@ func PowInteger[Z Zahl](a, n Z) Z {
 	return res
 }
 
+func Ceil[Z Zahl](a, b Z) Z {
+	return (a + b - 1) / b
+}
+
 /*
 Number theoretic algorithm
 - total
+- factorial
+- product
 - Enumerate all divisors
 - check prime number
 - Cumulative Sum
@@ -276,6 +510,39 @@ func Sum[R Real](vars ...R) R {
 	}
 
 	return sum
+}
+
+func Factorial[Z Zahl](n Z) Z {
+	res := make([]Z, 0)
+	for i := Z(1); i < n; i++ {
+		res = append(res, i)
+	}
+	return Product[Z](res...)
+}
+
+func Product[R Real](vars ...R) R {
+	if len(vars) == 0 {
+		return 0
+	} else {
+		product := R(1)
+		for _, v := range vars {
+			product *= v
+		}
+		return product
+	}
+}
+
+func ProductWithMod[Z Zahl](mod Z, vars ...Z) Z {
+	if len(vars) == 0 {
+		return 0
+	} else {
+		product := Z(1)
+		for _, v := range vars {
+			product *= v
+			product %= mod
+		}
+		return product
+	}
 }
 
 func Divisors[Z Zahl](n Z) []Z {
@@ -469,9 +736,9 @@ Search Algorithm
 - Measuring Worm Algorithm
 */
 
-func BinarySearch[Z Zahl](negative, positive, dist Z,
-	IsContinue func(negative, positive, dist Z) bool,
-	IsPositive func(mid Z) bool) (Z, Z) {
+func BinarySearch[R Real](negative, positive, dist R,
+	IsContinue func(negative, positive, dist R) bool,
+	IsPositive func(mid R) bool) (R, R) {
 
 	for IsContinue(negative, positive, dist) {
 		mid := negative + Abs(positive-negative)/2
