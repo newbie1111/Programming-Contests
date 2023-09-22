@@ -7,7 +7,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"reflect"
 	"strconv"
 	"strings"
 )
@@ -87,16 +86,6 @@ type UnSignedInteger interface {
 
 type Float interface {
 	float32 | float64
-}
-
-/*
-Input / Output
-*/
-
-func dump(variable ...interface{}) {
-	for _, v := range variable {
-		debug.Printf("%v : %v\n", reflect.TypeOf(v), v)
-	}
 }
 
 /*
@@ -602,7 +591,7 @@ func CumulativeSum[R Real](vars []R) []R {
 
 func ArithmeticProgressionsSum[R Real, Z Zahl](a0, d R, n Z) (sum R, err error) {
 	if n < 0 {
-		sum, err = 0, errors.New("number of terms must not be negative.")
+		sum, err = 0, errors.New("number of terms must not be negative")
 	} else {
 		nReal := R(n)
 		sum, err = (a0*nReal)+nReal*(nReal-1)/2*d, nil
@@ -613,7 +602,7 @@ func ArithmeticProgressionsSum[R Real, Z Zahl](a0, d R, n Z) (sum R, err error) 
 
 func GeometicProgressionsSum[Z Zahl](a0, r, n Z) (sum Z, err error) {
 	if n < 0 {
-		sum, err = 0, errors.New("number of terms must not be negative.")
+		sum, err = 0, errors.New("number of terms must not be negative")
 	} else {
 		sum, err = a0*(PowInteger(r, n)-1)/(r-1), nil
 	}
