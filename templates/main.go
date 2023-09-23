@@ -233,7 +233,6 @@ func (cq *CircularQueue[Any]) PushLeft(x Any) {
 		cq.head = cq.previousIndex(cq.head)
 		cq.cq[cq.head] = x
 	}
-
 }
 
 func (cq *CircularQueue[Any]) PushRight(x Any) {
@@ -250,11 +249,24 @@ func (cq *CircularQueue[Any]) PushRight(x Any) {
 		cq.cq[cq.tail] = x
 		cq.tail = cq.nextIndex(cq.tail)
 	}
+}
 
+func (cq *CircularQueue[Any]) PopRight() Any {
+	if cq.Empty() {
+		return *new(Any)
+	} else {
+		cq.tail = cq.previousIndex(cq.tail)
+		res := cq.cq[cq.tail]
+		return res
+	}
 }
 
 func (cq *CircularQueue[Any]) At(index int) Any {
 	return cq.cq[(cq.head+index)%len(cq.cq)]
+}
+
+func (cq *CircularQueue[Any]) SetAt(index int, value Any) {
+	cq.cq[(cq.head+index)%len(cq.cq)] = value
 }
 
 type Vector[R Real] []R
