@@ -66,6 +66,29 @@ func solve2(N int, S []int) any {
 	return ans
 }
 
+func solve3(N int, S []int) any {
+	var (
+		ans      = Sum(S...)
+		minNot10 = 101
+	)
+
+	if ans%10 == 0 {
+		for _, s := range S {
+			if s%10 != 0 {
+				minNot10 = Min(minNot10, s)
+			}
+		}
+
+		if minNot10 == 101 {
+			ans = 0
+		} else {
+			ans -= minNot10
+		}
+	}
+
+	return ans
+}
+
 func main() {
 	var (
 		N int
@@ -78,7 +101,7 @@ func main() {
 		S = append(S, int(n))
 	}
 
-	ans := solve2(N, S)
+	ans := solve3(N, S)
 	fmt.Println(ans)
 }
 
