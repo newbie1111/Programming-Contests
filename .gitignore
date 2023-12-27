@@ -1,6 +1,11 @@
+# input / output
 atcoder.jp/**/*.in
 atcoder.jp/**/*.out
 atcoder.jp/**/generate.py
+# against the rules
 company_specific_test
 paiza
 track
+volunteer
+# package
+go.*
